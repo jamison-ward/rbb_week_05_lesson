@@ -7,6 +7,8 @@ output:
     toc_float: true
     css: !expr here::here("global/style/style.css")
     highlight: kate
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r, eval = F, include = F}
@@ -135,8 +137,8 @@ yaounde_age
 ```{r}
 yaounde_age %>%  
   # let's define an adult group and a child group
-  mutate(age_group = ______________________________
-                     ______________________________)
+  mutate(age_group = case_when(age_years < 18 ~ "Child",
+                               age_years >= 18 ~ "Adult"))
 ```
 
 ------------------------------------------------------------------------
@@ -186,7 +188,9 @@ With the `flu_linelist` data, make a new column, called `age_group`, that has th
 # Complete the code with your answer:
 Q_age_group <- 
   flu_linelist %>% 
-  mutate(age_group = ______________________________)
+  mutate(age_group = case_when(age < 60 ~ "Below 60",
+                               age >= 60 ~ "60 and above"))
+tabyl(Q_age_group, age_group)
 ```
 
 ```{r include = FALSE}
@@ -209,7 +213,7 @@ Out of the entire sample of individuals in the `flu_linelist` dataset, what perc
 
 ```{r eval = FALSE}
 # Enter your answer as a WHOLE number without quotes:
-Q_age_group_percentage <- YOUR_ANSWER_HERE
+Q_age_group_percentage <- 82
 ```
 
 ```{r include = FALSE}
@@ -232,8 +236,8 @@ Q_age_group_percentage <- YOUR_ANSWER_HERE
 ```{r render = reactable_10_rows}
 yaounde_age %>%  
   # let's define only children and all others as "Not children"
-  mutate(age_group = ________________________
-                     ________________________)
+  mutate(age_group = case_when(age_years < 18 ~ "Child",
+                               TRUE ~ "Not children"))
 ```
 
 -   It can be read as: "if age is below 18, input 'Child', and *for everyone else not yet matched*, input 'Not child'".
@@ -251,7 +255,7 @@ yaounde_age %>%
   mutate(age_group = case_when(age_years < 18 ~ "Child", 
                                age_years >= 18 ~ "Adult", 
                                # we add a condition for NA values:
-                               ______________________________)
+                               is.na(age_years) ~ "Missing age"))
 ```
 
 ------------------------------------------------------------------------
@@ -266,7 +270,9 @@ As before, using the `flu_linelist` data, make a new column, called `age_group`,
 # Complete the code with your answer:
 Q_age_group_nas <- 
   flu_linelist %>% 
-  mutate(age_group = ______________________________)
+  mutate(age_group = case_when(age < 60 ~ "Below 60",
+                               age >= 60 ~ "60 and above",
+                               is.na(age) ~ "Missing age"))
 ```
 
 ```{r include = FALSE}
@@ -290,7 +296,9 @@ Recode "f", "m" and `NA` to "Female", "Male" and "Missing gender" respectively. 
 # Complete the code with your answer:
 Q_gender_recode <- 
   flu_linelist %>% 
-  mutate(gender = ___________________________________)
+  mutate(gender = case_when(gender == "f" ~ "Female",
+                            gender == "m" ~ "Male",
+                            is.na(gender) ~ "Missing gender"))
 ```
 
 ```{r include = FALSE}
@@ -324,8 +332,7 @@ yaounde_educ
 yaounde_educ %>%
   # let's create highest_educ_recode 
   # recoding "University" and "Doctorate" to the value "Post-secondary"
-  mutate(highest_educ_recode = 
-           _________________________________________________________________)
+  mutate(highest_educ_recode = case_when(highest_education %in% c("university", "Doctorate") ~ "Post-seconday"))
 ```
 
 ------------------------------------------------------------------------
@@ -340,8 +347,8 @@ yaounde_educ %>%
 ```{r}
 yaounde_educ %>%
   # let's add the condition TRUE ~ highest_education
-  mutate(highest_educ_recode = 
-           _________________________________________________________________)
+  mutate(highest_educ_recode = case_when(highest_education %in% c("University", "Doctorate") ~ "Post-secondary",
+                                         TRUE ~ highest_education))
 ```
 
 -   Now it reads:
@@ -361,7 +368,8 @@ Using the `flu_linelist` data, modify the existing column `outcome` by replacing
 # Complete the code with your answer:
 Q_recode_recovery <- 
   flu_linelist %>% 
-  ____________________________
+  mutate(outcome = case_when(outcome == "Recover" ~ "Recovery",
+                             TRUE ~ outcome))
 ```
 
 ```{r include = FALSE}
@@ -384,8 +392,8 @@ Q_recode_recovery <-
 yaounde_BMI <-
   yaounde %>%
   # let's convert our height to meters and define the BMI
-  mutate(height_m = _____________________
-         ________________________________) %>%
+  mutate(height_m = height_cm / 100,
+         BMI = weight_kg / height_m ** 2) %>%
   #let's select only the BMI
   select(BMI)
 
@@ -396,10 +404,11 @@ yaounde_BMI
 yaounde_BMI <-
   yaounde_BMI %>%
   # let's create the BMI classification
-  _________________________________
-  _________________________________
-  _________________________________
-  _________________________________
+  mutate(BMI_classification = 
+           case_when(BMI >= 18.5 & BMI < 25 ~ "Normal weight",
+                     BMI < 18.5 ~ "Underweight",
+                     BMI >= 25 & BMI < 30 ~ "Overweight",
+                     BMI > 30 ~ "Obese"))
 
 yaounde_BMI
 ```
@@ -438,7 +447,8 @@ With the `flu_linelist` data, make a new column, called `adolescent`, that has t
 # Complete the code with your answer:
 Q_adolescent_grouping <- 
   flu_linelist %>% 
-  _________________________________________-
+  mutate(adolescent = case_when(age >= 10 & age <= 19 ~ "Yes",
+                                TRUE ~ "No"))
 ```
 
 ```{r include = FALSE}
@@ -463,7 +473,7 @@ Q_adolescent_grouping <-
 yaounde_age_sex <- 
   yaounde %>% 
   # let's select our variables of interest
-  _______________________
+  select(age_years, sex)
 
 yaounde_age_sex
 ```
@@ -484,10 +494,11 @@ yaounde_age_sex
 
 ```{r}
 yaounde_age_sex %>%
-  mutate(recruit = 
-           __________________________________________________________________
-           __________________________________________________________________
-           __________________________________________________________________)
+  mutate(recruit = case_when(
+    age_years >= 20 & age_years <= 29 & sex == "Female" ~ "Recruit to female study",
+    age_years >= 20 & age_years <= 29 & sex == "Male" ~ "Recruit to male study",
+    TRUE ~ "Do not recruit"
+  ))
 ```
 
 ------------------------------------------------------------------------
@@ -505,7 +516,11 @@ With the `flu_linelist` data, make a new column, called `recruit` with the follo
 # Complete the code with your answer:
 Q_age_province_grouping <- 
   flu_linelist %>% 
-  mutate(recruit = ______________________________)
+  mutate(recruit = case_when(
+    age >= 30 & age < 60 & province == "Jiangsu" ~ "Recruit to Jiangsu study",
+    age >= 30 & age < 60 & province == "Zhejiang" ~ "Recruit to Zhejiang study",
+    TRUE ~ "Do not recruit"
+  ))
 ```
 
 ```{r include = FALSE}
@@ -571,9 +586,11 @@ yaounde_age %>%
 # start with "Child" condition
 yaounde_age %>% 
   # let's write some closed bound conditions on age
-  mutate(age_group = ____________________________________________________
-                     ____________________________________________________
-                     ____________________________________________________)
+  mutate(age_group = case_when(
+    age_years < 18 ~ "Child",
+    age_years >= 18 & age_years < 30 ~ "Young Adult",
+    age_years >= 30 & age_years < 120 ~ "Older Adult"
+  ))
 ```
 
 -   Make conditions **independent of their order**
@@ -624,10 +641,10 @@ yaounde_age %>%
 ```{r}
 yaounde_symptoms_slice <- 
   yaounde %>% 
-  select(_________________________________) %>% 
+  select(symp_anosmia_or_ageusia, symp_cough) %>% 
   # slice of specific rows useful for demo: 32, 711, 625, 651  
   # Once you find the right code, you would remove this slice
-  slice(__________________)
+  slice(32, 711, 625, 651)
 
 yaounde_symptoms_slice
 ```
@@ -638,9 +655,10 @@ yaounde_symptoms_slice
 yaounde_symptoms_slice %>%
   # the condition on symp_anosmia_or_ageusia comes 
   # before the condition on symp_cough 
-  mutate(covid_status = 
-           ____________________________________________ 
-           ____________________________________________)
+  mutate(covid_status = case_when(
+    symp_anosmia_or_ageusia == "Yes" ~ "Probable COVID",
+    symp_cough == "Yes" ~ "Possible COVID"
+  ))
 ```
 
 ------------------------------------------------------------------------
@@ -674,7 +692,7 @@ yaounde_symptoms_slice %>%
 yaounde_symptoms_slice %>% 
   # we will add a condition to possible COVID
   mutate(covid_status = case_when(
-    symp_cough == "Yes" & symp_anosmia_or_ageusia !="Yes" ~ "Possible COVID",
+    symp_cough == "Yes" & symp_anosmia_or_ageusia != "Yes" ~ "Possible COVID",
     symp_anosmia_or_ageusia == "Yes" ~ "Probable COVID"))
 ```
 
@@ -692,7 +710,10 @@ With the `flu_linelist` dataset, create a new column called `follow_up_priority`
 # Complete the code with your answer:
 Q_priority_groups <- 
   flu_linelist %>% 
-  mutate(follow_up_priority = ________________
+  mutate(follow_up_priority = case_when(
+    age < 18 ~ "Highest priority",
+    gender == "f" ~ "High priority",
+    TRUE ~ "No priority"
   ))
 
 ```
@@ -735,9 +756,9 @@ yaounde_educ %>%
            if_else(
              highest_education %in% c("University", "Doctorate"),
              # if TRUE then we recode
-             _____________________
+             "Post-secondary",
              # if FALSE then we keep default value
-             _____________________
+             highest_education
              ))
 ```
 
@@ -756,7 +777,7 @@ This is exactly the same question as your first practice question, but this time
 # Complete the code with your answer:
 Q_age_group_if_else <- 
   flu_linelist %>% 
-  mutate(age_group = if_else(______________________________))
+  mutate(age_group = if_else(age < 50, "Below 50", "50 and above"))
 ```
 
 ```{r include = FALSE}
