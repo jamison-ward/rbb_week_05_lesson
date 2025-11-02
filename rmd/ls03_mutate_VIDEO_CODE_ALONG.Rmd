@@ -7,6 +7,8 @@ output:
     toc_float: true
     css: !expr here::here("global/style/style.css")
     highlight: kate
+editor_options: 
+  chunk_output_type: console
 ---
 
 
@@ -125,7 +127,7 @@ sarcopenia
 Let's create a data frame, `yao_height`, with just this column, for easy illustration:
 
 ```{r}
-yao_height <- yaounde %>% select(_____________)
+yao_height <- yaounde %>% select(height_cm)
 yao_height
 ```
 
@@ -141,7 +143,7 @@ yao_height
 
 ```{r}
 yao_height %>% 
-  mutate(___________________)
+  mutate(height_meters = height_cm / 100)  # Create a NEW column by dividing all entries in an existing column by 100
 ```
 
 ------------------------------------------------------------------------
@@ -160,7 +162,7 @@ yao_height %>%
 
 ```{r}
 yao_height %>% 
-  mutate(___________________)
+  mutate(height_cm = height_cm + 5)  # Overwrite an EXISTING column by adding 5 to all entries in the old column
 ```
 
 ------------------------------------------------------------------------
@@ -173,8 +175,8 @@ The `sarcopenia` data frame has a variable `weight_kg`, which contains responden
 ```{r, eval = FALSE}
 # Complete the code with your answer:
 Q_weight_to_g <- 
-  sarcopenia %>% 
-  _____________________
+  sarcopenia %>%
+  mutate(weight_grams = weight_kg * 1000)
 ```
 
 ```{r, include = FALSE}
@@ -214,7 +216,7 @@ Q_weight_to_g <-
 
 ```{r}
 yao_height %>% 
-  mutate(_______________________)
+  mutate(row_index = 1:n())
 ```
 
 ------------------------------------------------------------------------
@@ -228,7 +230,10 @@ Add a variable called `respondent_id` to the `sarcopenia` data frame. The `respo
 # Complete the code with your answer:
 Q_sarcopenia_resp_id <- 
   sarcopenia %>% 
-  mutate(________________________)
+  mutate(respondent_id = 1:n())  # Add respondent_id column to data frame
+
+Q_sarcopenia_resp_id_arr <- Q_sarcopenia_resp_id %>%
+  select(respondent_id, everything())  # Move respondent_id column to left of data frame
 ```
 
 Note. The `sarcopenia` data frame has 10 columns, which are unlikely to all fit in your console when you print this data frame. Your new column, `respondent_id` will also probably be hidden.
@@ -262,8 +267,8 @@ So to see actually see the new column, you can use `View()` to view the entire d
 
 ```{r}
 yao %>%
-  select(____________________) %>% 
-  mutate(____________________)
+  select(age_years) %>% 
+  mutate(is_child = age_years <= 18)
 ```
 
 ------------------------------------------------------------------------
@@ -277,7 +282,7 @@ yao %>%
 ```{r}
 yao %>%
   mutate(is_child = age_years <= 18) %>% 
-  tabyl(_______________)
+  tabyl(is_child)
 ```
 
 You can observe that 31.8% (0.318...) of respondents in the dataset are children.
@@ -294,8 +299,8 @@ You can observe that 31.8% (0.318...) of respondents in the dataset are children
 
 ```{r}
 yao %>% 
-  select(_____________) ___
-  ___________________________________________
+  select(symptoms)  %>% 
+  mutate(has_no_symptoms = symptoms == "No symptoms")
 ```
 
 ------------------------------------------------------------------------
@@ -312,7 +317,7 @@ With a female subset of the `sarcopenia` data frame, add a variable called `low_
 Q_women_low_grip_strength <- 
   sarcopenia %>% 
   filter(sex_male_1_female_0 == 0) %>% # first we filter the dataset to only women
-  mutate(________________________)
+  mutate(low_grip_strength = grip_strength_kg < 20)
 ```
 
 ```{r, include = FALSE}
@@ -324,7 +329,10 @@ Q_women_low_grip_strength <-
 What percentage of women surveyed have a low grip strength according to the definition above? Enter your answer as a number without quotes (e.g. 43.3 or 12.2).
 
 ```{r, eval = FALSE}
-Q_prop_women_low_grip_strength <- YOUR_ANSWER_HERE
+Q_prop_women_low_grip_strength <- 82.6
+  
+Q_women_low_grip_strength %>% 
+  tabyl(low_grip_strength)
 ```
 
 ```{r, include = FALSE}
@@ -354,13 +362,13 @@ You can use `mutate()` to calculate BMI in the `yao` dataset as follows:
 
 ```{r}
 yao %>%
-  __________________________
+  select(weight_kg, height_cm) %>% 
   
   # first obtain the height in meters  
- __________________________
+ mutate(height_meters = height_cm / 100) %>% 
   
   # then use the BMI formula
-  __________________________
+  mutate(bmi = weight_kg / height_meters ** 2)
 ```
 
 ------------------------------------------------------------------------
@@ -377,13 +385,13 @@ yao %>%
 ```
 
 ```{r COMPLETE_CODE}
-# yao_bmi <- 
-#   yao %>%
-#   select(weight_kg,  height_cm) %>% 
-#   # first obtain the height in meters  
-#   mutate(height_meters = height_cm/100) %>% 
-#   # then use the BMI formula
-#   mutate(bmi = weight_kg / (height_meters)^2)
+yao_bmi <-
+  yao %>%
+  select(weight_kg,  height_cm) %>%
+  # first obtain the height in meters
+  mutate(height_meters = height_cm/100) %>%
+  # then use the BMI formula
+  mutate(bmi = weight_kg / (height_meters)^2)
 
 ```
 
@@ -408,7 +416,7 @@ Calculate the ASM value for all individuals in the `sarcopenia` dataset.
 # Complete the code with your answer:
 Q_asm_calculation <- 
   sarcopenia %>% 
-  mutate(asm = _______________________________________________)
+  mutate(asm = (0.244 * weight_kg) + (7.8 * height_meters) + (6.6 * sex_male_1_female_0) - (0.098 * age) - 4.5)
 ```
 
 ```{r, include = FALSE}
@@ -432,7 +440,7 @@ Q_asm_calculation <-
 
 ```{r}
 yao_bmi %>% 
-  mutate(___________________________)
+  mutate(bmi_integer = as.integer(bmi))
 ```
 
 
@@ -445,7 +453,7 @@ yao_bmi %>%
 ```{r}
 yao_bmi %>% 
   mutate(bmi_integer = as.integer(bmi), 
-         ________________________________) 
+         bmi_round = round(bmi)) 
 ```
 
 PRACTICE TIME !
@@ -459,7 +467,7 @@ This should go in a new column called `age_integer`
 # Complete the code with your answer:
 Q_age_integer <- 
   sarcopenia %>% 
-  mutate(age_integer =  ________________________)
+  mutate(age_integer =  as.integer(age))
 ```
 
 ```{r, include = FALSE}
