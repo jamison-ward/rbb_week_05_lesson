@@ -4,5 +4,5 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-RStudio project from week 4 of The GRPAH Courses R Basics & Beyond
+RStudio project from week 5 of The GRAPH Courses R Basics & Beyond
 
